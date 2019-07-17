@@ -15,11 +15,16 @@ const userShema = new Schema({
       required: true
     },
     created:{
-        type:Date,
-        default:Date.now()
+        type:Date
     }
 }, {versionKey: false});
 
+userShema.methods.toJSON = function() {
+    const user = this
+    const userObject = user.toObject();
+    delete userObject.password;
+    return userObject
+}
 userShema.methods.comparePassword = function (password) {
     return bcrypt.compareSync(password,this.hash_password);
 }

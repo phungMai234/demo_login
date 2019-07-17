@@ -2,59 +2,37 @@ const user = require('../models/userModel');
 const bcrypt = require('bcrypt');
 
 exports.register = async (req, res) =>{
-    try {
-        let {username, password} = req.body;
-        let newUser = await user.findOne({username: username});
-        if(newUser)
+    try{
+        const {username, password} = req.body;
+        const userExist = await user.findOne({username: username})
+        if(userExist)
         {
             return res.json({
-                success: false,
-                message: 'Username is exist'
+                success:false,
+                message: 'The username is already exist on this account!'
             })
         }
-        else
-        {
-            bcrypt.hash(password, 10, function (err, hash) {
-                if(err)
-                {
-                    res.json({
-                        success: false,
-                        error: err.message
-                    })
-                }
-                else
-                {
-                    const newUser = new user({
-                        username:username,
-                        hash_password: hash
-                    })
-                    newUser.save()
-                        .then(nUser =>{
-                            res.json({
-                                success: true,
-                                data: user
 
-                            });
-                        })
-                        .catch(err =>{
-                            res.json({
-                                success: false,
-                                error: err.message
-                            })
-                        })
-                }
-            })
-        }
+        const newUser = new user({
+            username:username,
+            password:password,
+            created:Date.now()
+        });
+        newUser.hash_password = await bcrypt.hashSync(password, 10);
+        await newUser.save();
+        return res.json({
+            success: true,
+            data: newUser
+        })
     }
     catch (e) {
-        console.log(e);
-        return res.json({
+        res.json({
             success: false,
-            error: err.message
+            error: e.message
         })
     }
 
-}
+};
 exports.sign_in = (req, res) =>{
     let {username, password} = req.body;
     user.findOne({username: username}, function (err, user) {
@@ -97,4 +75,4 @@ exports.loginRequired = function (req, res, next) {
             message: 'Unauthorized user'
         })
     }
-}
+};
