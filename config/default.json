@@ -1,5 +1,5 @@
 {
-  "PORT": 8000,
+  "PORT": 3001,
   "HOST": "localhost",
   "MONGO_PATH": 27017,
   "MONGO_HOST": "localhost"

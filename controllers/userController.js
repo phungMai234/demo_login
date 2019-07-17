@@ -1,5 +1,6 @@
 const user = require('../models/userModel');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 exports.register = async (req, res) =>{
     try{
@@ -33,46 +34,38 @@ exports.register = async (req, res) =>{
     }
 
 };
-exports.sign_in = (req, res) =>{
-    let {username, password} = req.body;
-    user.findOne({username: username}, function (err, user) {
-        if(err)
-        {
-            throw err;
-        }
-        if(!user)
-        {
-            res.json({
-                message:'Authentication failed. User not found'
-            })
-        }
-        else if(user)
-        {
-            if(!user.comparePassword(password))
-            {
-                res.json({
-                    message:'Authentication failed. Wrong password'
-                })
-            }
-        }
-        else
+exports.sign_in = async (req, res) =>{
+
+    try{
+        let {username, password} = req.body;
+        const userSignin = await user.findOne({username: username});
+        if(!userSignin)
         {
             return res.json({
-                usernam: username
+                success: false,
+                error: "Authentication failed. User not found"
             })
         }
 
-    })
-
-};
-exports.loginRequired = function (req, res, next) {
-    if(req.user)
-    {
-        next();
+        const match = await bcrypt.compareSync(password, userSignin.hash_password)
+        if(match)
+        {
+            res.json({
+                success:true,
+                token:jwt.sign({username:userSignin.username, _id:userSignin._id},'RESTFULAPIs')
+            })
+        }
+        else {
+            res.json({
+                success: false,
+                error: "Authentication failed. Wrong password"
+            })
+        }
     }
-    else {
-        return res.json({
-            message: 'Unauthorized user'
+    catch (e) {
+        res.json({
+            success: false,
+            error: e.message
         })
     }
 };

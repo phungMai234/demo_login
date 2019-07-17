@@ -22,12 +22,8 @@ const userShema = new Schema({
 userShema.methods.toJSON = function() {
     const user = this
     const userObject = user.toObject();
-    delete userObject.password;
+    delete userObject.hash_password;
     return userObject
 }
-userShema.methods.comparePassword = function (password) {
-    return bcrypt.compareSync(password,this.hash_password);
-}
-
 const Users = database.model('Users', userShema);
 module.exports = Users;
